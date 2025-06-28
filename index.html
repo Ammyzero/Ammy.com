@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองฮอตสปอต</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .form-container {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #00d4ff;
+            font-weight: 500;
+        }
+
+        input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="time"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, input[type="date"]:focus, input[type="time"]:focus, select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        select option {
+            background: #2d2d2d;
+            color: #ffffff;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .admin-btn {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+        }
+
+        .admin-btn:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .admin-container {
+            display: none;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+        }
+
+        .booking-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #00d4ff;
+        }
+
+        .booking-item h4 {
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+
+        .booking-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        .password-container {
+            display: none;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .delete-btn {
+            background: linear-gradient(45deg, #ff4757, #c44569);
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 ระบบจองฮอตสปอต</h1>
+            <p>จองฮอตสปอตได้ง่ายๆ ไม่ต้องสมัครสมาชิก</p>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            ✅ จองฮอตสปอตเรียบร้อยแล้ว!
+        </div>
+
+        <!-- Booking Form -->
+        <div class="form-container" id="bookingForm">
+            <h2 style="margin-bottom: 20px; color: #00d4ff;">📝 ฟอร์มจองฮอตสปอต</h2>
+            
+            <div class="form-group">
+                <label for="name">👤 ชื่อ-นามสกุล *</label>
+                <input type="text" id="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">📱 เบอร์โทรศัพท์ *</label>
+                <input type="tel" id="phone" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">📧 อีเมล</label>
+                <input type="email" id="email">
+            </div>
+
+            <div class="form-group">
+                <label for="date">📅 วันที่ใช้งาน *</label>
+                <input type="date" id="date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="timeStart">⏰ เวลาเริ่ม *</label>
+                <input type="time" id="timeStart" required>
+            </div>
+
+            <div class="form-group">
+                <label for="timeEnd">⏰ เวลาสิ้นสุด *</label>
+                <input type="time" id="timeEnd" required>
+            </div>
+
+            <div class="form-group">
+                <label for="purpose">🎯 วัตถุประสงค์การใช้งาน</label>
+                <select id="purpose">
+                    <option value="ทำงาน">ทำงาน</option>
+                    <option value="ประชุม">ประชุม</option>
+                    <option value="เรียน">เรียนออนไลน์</option>
+                    <option value="บันเทิง">บันเทิง</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
+                </select>
+            </div>
+
+            <button onclick="submitBooking()" style="width: 100%; margin-bottom: 15px;">
+                🚀 จองฮอตสปอต
+            </button>
+
+            <button onclick="showPasswordPrompt()" class="admin-btn" style="width: 100%;">
+                🔐 เข้าสู่ระบบแอดมิน
+            </button>
+        </div>
+
+        <!-- Password Prompt -->
+        <div class="password-container" id="passwordContainer">
+            <h3 style="margin-bottom: 20px;">🔐 ใส่รหัสผ่านแอดมิน</h3>
+            <input type="password" id="adminPassword" placeholder="รหัสผ่าน" style="margin-bottom: 15px;">
+            <button onclick="checkPassword()">เข้าสู่ระบบ</button>
+            <button onclick="hidePasswordPrompt()" class="admin-btn">ยกเลิก</button>
+        </div>
+
+        <!-- Admin Panel -->
+        <div class="admin-container" id="adminPanel">
+            <h2 style="margin-bottom: 20px; color: #ff6b35;">🛡️ ระบบจัดการแอดมิน</h2>
+            
+            <div class="stats" id="statsContainer">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalBookings">0</div>
+                    <div>การจองทั้งหมด</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todayBookings">0</div>
+                    <div>จองวันนี้</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="upcomingBookings">0</div>
+                    <div>จองที่จะมาถึง</div>
+                </div>
+            </div>
+
+            <button onclick="exportData()" style="margin-bottom: 20px;">📊 ส่งออกข้อมูล</button>
+            <button onclick="hideAdmin()" class="admin-btn" style="margin-bottom: 20px;">❌ ออกจากระบบ</button>
+            
+            <h3 style="margin-bottom: 15px; color: #00d4ff;">📋 รายการจองทั้งหมด</h3>
+            <div id="bookingsList"></div>
+        </div>
+    </div>
+
+    <script>
+        let bookings = [];
+        let bookingId = 1;
+
+        // Load bookings from memory on page load
+        function loadBookings() {
+            // In a real application, this would load from a database
+            updateAdminDisplay();
+        }
+
+        function submitBooking() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+            const date = document.getElementById('date').value;
+            const timeStart = document.getElementById('timeStart').value;
+            const timeEnd = document.getElementById('timeEnd').value;
+            const purpose = document.getElementById('purpose').value;
+
+            if (!name || !phone || !date || !timeStart || !timeEnd) {
+                alert('กรุณากรอกข้อมูลที่จำเป็น (*)');
+                return;
+            }
+
+            // Check time validity
+            if (timeStart >= timeEnd) {
+                alert('เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด');
+                return;
+            }
+
+            const booking = {
+                id: bookingId++,
+                name: name,
+                phone: phone,
+                email: email || '-',
+                date: date,
+                timeStart: timeStart,
+                timeEnd: timeEnd,
+                purpose: purpose,
+                bookingTime: new Date().toLocaleString('th-TH')
+            };
+
+            bookings.push(booking);
+
+            // Show success message
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Clear form
+            document.getElementById('name').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('date').value = '';
+            document.getElementById('timeStart').value = '';
+            document.getElementById('timeEnd').value = '';
+            document.getElementById('purpose').selectedIndex = 0;
+
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 3000);
+
+            updateAdminDisplay();
+        }
+
+        function showPasswordPrompt() {
+            document.getElementById('passwordContainer').style.display = 'block';
+            document.getElementById('bookingForm').style.display = 'none';
+        }
+
+        function hidePasswordPrompt() {
+            document.getElementById('passwordContainer').style.display = 'none';
+            document.getElementById('bookingForm').style.display = 'block';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function checkPassword() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === '2533') {
+                document.getElementById('passwordContainer').style.display = 'none';
+                document.getElementById('bookingForm').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                updateAdminDisplay();
+            } else {
+                alert('รหัสผ่านไม่ถูกต้อง');
+            }
+        }
+
+        function hideAdmin() {
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('bookingForm').style.display = 'block';
+            document.getElementById('adminPassword').value = '';
+        }
+
+        function updateAdminDisplay() {
+            const bookingsList = document.getElementById('bookingsList');
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Update statistics
+            document.getElementById('totalBookings').textContent = bookings.length;
+            
+            const todayBookings = bookings.filter(booking => booking.date === today);
+            document.getElementById('todayBookings').textContent = todayBookings.length;
+            
+            const upcomingBookings = bookings.filter(booking => booking.date >= today);
+            document.getElementById('upcomingBookings').textContent = upcomingBookings.length;
+
+            if (bookings.length === 0) {
+                bookingsList.innerHTML = '<p style="text-align: center; color: #666;">ยังไม่มีการจองฮอตสปอต</p>';
+                return;
+            }
+
+            // Sort bookings by date and time
+            const sortedBookings = [...bookings].sort((a, b) => {
+                if (a.date !== b.date) {
+                    return new Date(a.date) - new Date(b.date);
+                }
+                return a.timeStart.localeCompare(b.timeStart);
+            });
+
+            let html = '';
+            sortedBookings.forEach(booking => {
+                html += `
+                    <div class="booking-item">
+                        <h4>📋 การจอง #${booking.id} - ${booking.name}
+                            <button class="delete-btn" onclick="deleteBooking(${booking.id})">🗑️ ลบ</button>
+                        </h4>
+                        <div class="booking-info">
+                            <div><strong>📱 เบอร์:</strong> ${booking.phone}</div>
+                            <div><strong>📧 อีเมล:</strong> ${booking.email}</div>
+                            <div><strong>📅 วันที่:</strong> ${formatDate(booking.date)}</div>
+                            <div><strong>⏰ เวลา:</strong> ${booking.timeStart} - ${booking.timeEnd}</div>
+                            <div><strong>🎯 วัตถุประสงค์:</strong> ${booking.purpose}</div>
+                            <div><strong>📝 วันที่จอง:</strong> ${booking.bookingTime}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            bookingsList.innerHTML = html;
+        }
+
+        function deleteBooking(id) {
+            if (confirm('คุณต้องการลบการจองนี้ใช่หรือไม่?')) {
+                bookings = bookings.filter(booking => booking.id !== id);
+                updateAdminDisplay();
+            }
+        }
+
+        function formatDate(dateString) {
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            };
+            return new Date(dateString).toLocaleDateString('th-TH', options);
+        }
+
+        function exportData() {
+            if (bookings.length === 0) {
+                alert('ไม่มีข้อมูลการจองให้ส่งออก');
+                return;
+            }
+
+            let csvContent = "ลำดับ,ชื่อ-นามสกุล,เบอร์โทรศัพท์,อีเมล,วันที่ใช้งาน,เวลาเริ่ม,เวลาสิ้นสุด,วัตถุประสงค์,วันที่จอง\\n";
+            
+            bookings.forEach(booking => {
+                csvContent += `${booking.id},"${booking.name}","${booking.phone}","${booking.email}","${booking.date}","${booking.timeStart}","${booking.timeEnd}","${booking.purpose}","${booking.bookingTime}"\\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `hotspot_bookings_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Set minimum date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+
+        // Load bookings on page load
+        loadBookings();
+    </script>
+</body>
+</html>
