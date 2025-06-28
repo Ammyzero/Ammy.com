@@ -184,6 +184,23 @@
             font-weight: bold;
             color: #00d4ff;
         }
+
+        .backup-section {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .backup-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            margin-right: 10px;
+        }
+
+        .clear-btn {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
     </style>
 </head>
 <body>
@@ -279,7 +296,16 @@
                 </div>
             </div>
 
-            <button onclick="exportData()" style="margin-bottom: 20px;">📊 ส่งออกข้อมูล</button>
+            <!-- Backup and Data Management Section -->
+            <div class="backup-section">
+                <h3 style="margin-bottom: 15px; color: #00d4ff;">💾 จัดการข้อมูล</h3>
+                <button onclick="exportData()" class="backup-btn">📊 ส่งออกข้อมูล CSV</button>
+                <button onclick="backupData()" class="backup-btn">💾 สำรองข้อมูล JSON</button>
+                <input type="file" id="restoreFile" accept=".json" style="display: none;" onchange="restoreData()">
+                <button onclick="document.getElementById('restoreFile').click()" class="backup-btn">📂 กู้คืนข้อมูล</button>
+                <button onclick="clearAllData()" class="clear-btn">🗑️ ลบข้อมูลทั้งหมด</button>
+            </div>
+
             <button onclick="hideAdmin()" class="admin-btn" style="margin-bottom: 20px;">❌ ออกจากระบบ</button>
             
             <h3 style="margin-bottom: 15px; color: #00d4ff;">📋 รายการจองทั้งหมด</h3>
@@ -291,10 +317,41 @@
         let bookings = [];
         let bookingId = 1;
 
-        // Load bookings from memory on page load
+        // Storage keys
+        const BOOKINGS_KEY = 'hotspot_bookings';
+        const BOOKING_ID_KEY = 'hotspot_booking_id';
+
+        // Load bookings from localStorage on page load
         function loadBookings() {
-            // In a real application, this would load from a database
-            updateAdminDisplay();
+            try {
+                const savedBookings = localStorage.getItem(BOOKINGS_KEY);
+                const savedBookingId = localStorage.getItem(BOOKING_ID_KEY);
+                
+                if (savedBookings) {
+                    bookings = JSON.parse(savedBookings);
+                }
+                
+                if (savedBookingId) {
+                    bookingId = parseInt(savedBookingId);
+                }
+                
+                updateAdminDisplay();
+            } catch (error) {
+                console.error('Error loading bookings:', error);
+                bookings = [];
+                bookingId = 1;
+            }
+        }
+
+        // Save bookings to localStorage
+        function saveBookings() {
+            try {
+                localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings));
+                localStorage.setItem(BOOKING_ID_KEY, bookingId.toString());
+            } catch (error) {
+                console.error('Error saving bookings:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+            }
         }
 
         function submitBooking() {
@@ -317,6 +374,19 @@
                 return;
             }
 
+            // Check for time conflicts
+            const conflictBooking = bookings.find(booking => 
+                booking.date === date && 
+                ((timeStart >= booking.timeStart && timeStart < booking.timeEnd) ||
+                 (timeEnd > booking.timeStart && timeEnd <= booking.timeEnd) ||
+                 (timeStart <= booking.timeStart && timeEnd >= booking.timeEnd))
+            );
+
+            if (conflictBooking) {
+                alert(`เวลานี้มีการจองแล้ว โดย ${conflictBooking.name} (${conflictBooking.timeStart}-${conflictBooking.timeEnd})`);
+                return;
+            }
+
             const booking = {
                 id: bookingId++,
                 name: name,
@@ -330,6 +400,7 @@
             };
 
             bookings.push(booking);
+            saveBookings(); // Save to localStorage
 
             // Show success message
             document.getElementById('successMessage').style.display = 'block';
@@ -430,6 +501,7 @@
         function deleteBooking(id) {
             if (confirm('คุณต้องการลบการจองนี้ใช่หรือไม่?')) {
                 bookings = bookings.filter(booking => booking.id !== id);
+                saveBookings(); // Save changes to localStorage
                 updateAdminDisplay();
             }
         }
@@ -450,10 +522,10 @@
                 return;
             }
 
-            let csvContent = "ลำดับ,ชื่อ-นามสกุล,เบอร์โทรศัพท์,อีเมล,วันที่ใช้งาน,เวลาเริ่ม,เวลาสิ้นสุด,วัตถุประสงค์,วันที่จอง\\n";
+            let csvContent = "ลำดับ,ชื่อ-นามสกุล,เบอร์โทรศัพท์,อีเมล,วันที่ใช้งาน,เวลาเริ่ม,เวลาสิ้นสุด,วัตถุประสงค์,วันที่จอง\n";
             
             bookings.forEach(booking => {
-                csvContent += `${booking.id},"${booking.name}","${booking.phone}","${booking.email}","${booking.date}","${booking.timeStart}","${booking.timeEnd}","${booking.purpose}","${booking.bookingTime}"\\n`;
+                csvContent += `${booking.id},"${booking.name}","${booking.phone}","${booking.email}","${booking.date}","${booking.timeStart}","${booking.timeEnd}","${booking.purpose}","${booking.bookingTime}"\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -470,11 +542,81 @@
             }
         }
 
+        function backupData() {
+            if (bookings.length === 0) {
+                alert('ไม่มีข้อมูลให้สำรอง');
+                return;
+            }
+
+            const backupData = {
+                bookings: bookings,
+                bookingId: bookingId,
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const link = document.createElement("a");
+            
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `hotspot_backup_${new Date().toISOString().split('T')[0]}.json`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function restoreData() {
+            const file = document.getElementById('restoreFile').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    if (backupData.bookings && Array.isArray(backupData.bookings)) {
+                        if (confirm('การกู้คืนข้อมูลจะเขียนทับข้อมูลเดิมทั้งหมด คุณต้องการดำเนินการต่อหรือไม่?')) {
+                            bookings = backupData.bookings;
+                            bookingId = backupData.bookingId || 1;
+                            saveBookings();
+                            updateAdminDisplay();
+                            alert('กู้คืนข้อมูลเรียบร้อยแล้ว!');
+                        }
+                    } else {
+                        alert('ไฟล์สำรองไม่ถูกต้อง');
+                    }
+                } catch (error) {
+                    alert('เกิดข้อผิดพลาดในการอ่านไฟล์สำรอง');
+                }
+                document.getElementById('restoreFile').value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm('คุณต้องการลบข้อมูลทั้งหมดใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้!')) {
+                if (confirm('ยืนยันอีกครั้ง: ลบข้อมูลทั้งหมดใช่หรือไม่?')) {
+                    bookings = [];
+                    bookingId = 1;
+                    saveBookings();
+                    updateAdminDisplay();
+                    alert('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว');
+                }
+            }
+        }
+
         // Set minimum date to today
         document.getElementById('date').min = new Date().toISOString().split('T')[0];
 
         // Load bookings on page load
         loadBookings();
+
+        // Auto-save every 5 minutes as a backup
+        setInterval(saveBookings, 300000);
     </script>
 </body>
 </html>
